@@ -1805,28 +1805,46 @@
   });
 
   // Form submit
-  function submitForm() {
-    const name = document.getElementById('fname').value;
-    const agency = document.getElementById('fagency').value;
-    const email = document.getElementById('femail').value;
-    const phone = document.getElementById('fphone').value;
-    const service = document.getElementById('fservice').value;
-    const msg = document.getElementById('fmsg').value;
+  async function submitForm() {
+    const name = document.getElementById('fname').value.trim();
+    const agency = document.getElementById('fagency').value.trim();
+    const email = document.getElementById('femail').value.trim();
+    const phone = document.getElementById('fphone').value.trim();
+    const service = document.getElementById('fservice').value.trim();
+    const msg = document.getElementById('fmsg').value.trim();
 
     if (!name || !email || !phone) {
       alert('Please fill in your name, email, and WhatsApp number.');
       return;
     }
 
-    // Build WhatsApp message
-    const waMsg = encodeURIComponent(
-      `New Lead from Website!\n\nName: ${name}\nAgency: ${agency}\nEmail: ${email}\nPhone: ${phone}\nService: ${service}\n\nMessage:\n${msg}`
-    );
+    // Disable button & show loading
+    const btn = document.querySelector('.form-submit');
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
 
-    // Open WhatsApp
-    window.open(`https://wa.me/923004370038?text=${waMsg}`, '_blank');
+    const payload = {
+      name,
+      agency,
+      email,
+      phone,
+      service,
+      message: msg,
+      submitted_at: new Date().toISOString(),
+      source: 'Website Contact Form'
+    };
 
-    // Show success
+    try {
+      await fetch('https://luqmanumer.app.n8n.cloud/webhook/ab9d8db2-2b78-4cfe-a9a1-d0b142520765', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+    } catch (err) {
+      console.error('Webhook error:', err);
+    }
+
+    // Show success regardless — webhook may block CORS on client side
     document.getElementById('formContent').style.display = 'none';
     document.getElementById('formSuccess').style.display = 'block';
   }
